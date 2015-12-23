@@ -2,17 +2,17 @@
 #
 # Dependencies:
 #   "url": ""
-#   "querystring": ""
+#   "hubot-pubsub": ""
 #
 # Configuration:
 #   Install [Redmine Webhook Plugin](https://github.com/suer/redmine_webhook) to your Redmine.
-#   Add hubot's endpoint to Redmine Project - Settings - WebHook - URL `http://<hubot-host>:<hubot-port>/hubot/redmine-notify?room=<room>` (see Screenshot)
+#   Add hubot's endpoint to Redmine Project - Settings - WebHook - URL `http://<hubot-host>:<hubot-port>/hubot/redmine-notify` (see Screenshot)
 #
 # Commands:
 #   None
 #
 # URLS:
-#   POST /hubot/redmine-notify?room=<room>
+#   POST /hubot/redmine-notify
 #
 # Author:
 #   tenten0213
@@ -20,7 +20,6 @@
 'use strict'
 
 url = require('url')
-querystring = require('querystring')
 util = require('util')
 
 class RedmineNotifier
@@ -49,13 +48,7 @@ class RedmineNotifier
     return req.body
 
   process: (req, res) ->
-    query = querystring.parse(url.parse(req.url).query)
-
     res.end('')
-
-    envelope = {}
-    envelope.user = {}
-    envelope.user.room = envelope.room = query.room if query.room
 
     data = null
 
@@ -90,7 +83,7 @@ class RedmineNotifier
               URL: #{issueUrl}
               """
 
-    @robot.send envelope, message
+    @robot.emit 'pubsub:publish', "redmine.#{action}", message
 
 module.exports = (robot) ->
   robot.redmine_notifier = new RedmineNotifier robot
